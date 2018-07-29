@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<head>
+	<title>rima</title>
+	<link rel="stylesheet" href="lib/style.css" type="text/css" media="all"/>
+	<script  language="JavaScript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+	<script language="JavaScript" type="text/javascript"
+	src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.0/jquery.min.js"></script>
+	<script language="JavaScript" type="text/javascript" src="lib/pouchdb-3.6.0.min.js"></script>
+	<script language="JavaScript" type="text/javascript">
+	//timer constants
+	var	oneHour			= 36000000;
+	var	tenMinutes		= 600000;
+	var threeMinutes 	= 180000;
+	var sixtySeconds 	= 60000;
+	var fifteenSeconds 	= 15000;
+	
+	$(window).resize(function() { //hide the vert. scrollbar
+		if((window.fullScreen) || 
+			(window.innerWidth == screen.width && 
+				window.innerHeight == screen.height)) {
+				document.body.style.cursor = "url(data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==), pointer";
+			$("html").css("overflow", "hidden");
+		} else {
+			document.body.style.cursor = "default";
+			$("html").css("overflow", "auto");
+		}
+	});
+	
+	//init the display
+	$("#info").hide();
+	$(document).ready(function() {
+		$(window).resize();
+		//on first load
+		$("#c0").hide();
+		$("#c1").hide();
+		$("#c2").hide();
+		$("#ci").hide();	
+		$("#info").fadeIn(fifteenSeconds); 	//...after rest of page renders
+		$("#c1").fadeIn(fifteenSeconds);
+		$("#ci").fadeIn(sixtySeconds);
+		$.ajaxSetup({ cache: false });
+	});
+			
+	//reload
+	setInterval(function() {
+		$("body").fadeOut(fifteenSeconds, function() { //fade everything out
+			location.reload(true); //now reload
+		});
+		console.log("----Location refreshed----");		
+	}, tenMinutes);  //
+		
+</script>
+</head>
+<body>	
+	<div class="main-content">
+		<div class="panel">
+			<div id="c0">&nbsp;</div>
+		</div>		
+		<div class="panel">
+			<div id="c1"><span class="va">an error occurred. Please stand by</span></div>
+		</div>			
+		<div class="panel">
+			<div id="ci"></div>		
+		</div>		
+	</div>
+	<p id="info">this is <a href="http://squidsilo.net/rima/">RIMA</a> by Squidsilo</p>
+</body>
+</html>
+
+

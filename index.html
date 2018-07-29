@@ -1,0 +1,157 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="lib/style.css" type="text/css" media="all"/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.0/jquery.min.js"></script>
+	</head>
+	<body>
+		<p id="info">this is <a href="http://squidsilo.net/rima/">RIMA</a> by Squidsilo</p>
+		<div id="main-content">
+			<div class="panel">
+				<div id="c0">container one</div>
+			</div>		
+			<div class="panel">
+				<div id="c1">container two</div>	
+			</div>			
+			<div class="panel">
+				<div id="c2">container three</div>		
+			</div>		
+		</div>
+	</body>
+
+	<script>
+		var live = false; 	
+		var dataFile = 'lib/rima2.json';	
+		var maxRecords = 0; //this is the latest, known, max records or extent of datastore
+		var localIndex = 0;	//the highest shown records index
+		var initStamp  = (new Date).getTime();
+		var asize = 3;
+		var timeStamps = [];
+		var panels = [ "#c0", "#c1", "#c2" ];	
+		var content = [];
+		var voice = [];
+		for(i = 0; i < asize; i++) {
+			timeStamps[i] = initStamp++; //ensure unique timestamps
+			console.log(timeStamps[i]);
+		}
+		/* 
+			check for local storage with modernizr & fail silently if no
+		*/
+		if(Modernizr.localstorage) {	
+			if(live == true) { //if non-live, we don't care. Start from zero if reloaded
+				if(localStorage.getItem("localIndex") != null) { //if yes, try n load the index (if not null)
+					localIndex = localStorage.getItem("localIndex");
+					//console.log("retrieved: " + localIndex);
+				} else {
+					localStorage.setItem("localIndex", "0"); // if no, init & create
+				}
+				console.log("init: local storage is supported and localIndex is: " + localIndex);
+			}		
+		} else {
+			document.write("init: local storage not supported.");
+		}
+		/* 
+			function chaining jigsaw:
+			setup:  		json data = loader(initialser)
+			poll interval: 	checkNewData(localIndex)->res = loader(initialser)	
+		*/
+		
+		/*
+			replaces the antdb load with call to static file on the same host
+		*/
+		
+		var data = {}; //fetched JSON data
+		function loader(callback) {   
+			var xobj = new XMLHttpRequest();
+				xobj.overrideMimeType("application/json");
+			xobj.open('GET', dataFile, true);
+			xobj.onreadystatechange = function () {
+				  if (xobj.readyState == 4 && xobj.status == "200") {
+					/*
+						Required use of an anonymous callback as .open will NOT return a value but 
+						simply returns undefined in asynchronous mode
+					*/
+					callback(xobj.responseText);
+				  }
+			};
+			xobj.send(null);  
+		}
+		
+		function initialiser() {
+			 loader(function(response) {
+			  // Parse JSON string into object
+				data = JSON.parse(response);
+				maxRecords = data.length;
+				//console.log("test: " + JSON.stringify(data));
+				console.log("initialiser - num recs: " + maxRecords);
+			 });
+		}
+		//var rec = checkNewData(0);
+		
+		//init the display
+		$("#info").hide();
+		initialiser();
+		$(document).ready(function() {
+			//on first load
+			$("#c0").hide();
+			$("#c1").hide();
+			$("#c2").hide();
+			$("#info").fadeIn(24000); //...after rest of page renders
+		});
+					
+		setInterval(function() {
+			console.log("interval - local index: " + localIndex); 
+			checkNewData(localIndex)
+			//if non-live, increment index & check for overrun
+		}, 14000); 
+		
+		function reloadPanel(id, content) {
+			$(id).fadeOut(7000, function() { //fade out, refresh & fade in
+				$(id).empty().append(content);
+				console.log("Loading " + content + " into: " + id);
+				$(id).fadeIn(7000); 
+			});	
+		}
+		function checkNewData(index) {
+			if(live == true) { var res = loader(initialiser); }
+			if(localIndex < maxRecords) { 					//ie. there's data to display
+				var idx = findLowest(timeStamps); 			//find oldest TS
+				console.log("checkNewData: " + timeStamps[idx] + " index: " + idx );				
+				prepMessage(idx, localIndex);				//& replace
+				//if we loaded new stuff - force a refresh:
+				reloadPanel(panels[idx],content[idx]);	
+			}
+			if(live == false && localIndex >= maxRecords) { 
+				localIndex = 0;
+				console.log("Looping: reset localIndex: " + localIndex);
+			}
+		}	
+		/*
+			This func had to change to work from json src now.
+		*/
+		function prepMessage(i, ri) {
+			try {
+				if(data[ri].voice == 'rima') { 
+					var vce = 'vb'; 
+				} else { 
+					var vce = 'va'; 
+				}
+				var c = '';
+				c += "<span class=\"" + vce + "\">" + data[ri].quote + "</span>";
+				content[i] = c;
+				console.log("localIndex: " + ri ); 
+				timeStamps[i] = (new Date).getTime();
+				localIndex++; //only index advance if successful
+				var saveIndex = parseInt(localIndex);
+				localStorage.setItem("localIndex", saveIndex); //try & save on local machine for persistence
+			} catch(err) {
+				console.log("Failed reading data.row[]... " + err);
+			}
+		}
+		function findLowest(arr) { //rtn index of lowest v in array
+			var v = Math.min.apply(Math, timeStamps); //Array.min(timeStamps);
+			var k = timeStamps.indexOf(v);
+			return k;
+		}
+	</script>
+</html>
