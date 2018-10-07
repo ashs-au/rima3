@@ -63,11 +63,10 @@
 			var xobj = new XMLHttpRequest();
 				xobj.overrideMimeType("application/json");
 			xobj.open('GET', dataFile, true);
-			xobj.onreadystatechange = function () {
+			xobj.onreadystatechange = function() {
 				  if (xobj.readyState == 4 && xobj.status == "200") {
 					/*
-						Required use of an anonymous callback as .open will NOT return a value but 
-						simply returns undefined in asynchronous mode
+					  if all OK (state == 4) - anon callback to fetch resp.
 					*/
 					callback(xobj.responseText);
 				  }
